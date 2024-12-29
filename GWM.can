@@ -1,0 +1,286 @@
+/*@!Encoding:1252*/
+includes
+{
+  
+}
+
+variables
+{
+  message Ball_Game_Mode_CAN CAN_Ball_Game_Mode_CAN;
+  message ABS_Msg_Data_CAN CAN_ABS_MSG_DATA_CAN;
+  message RDS_Coder_Data_CAN CAN_RDS_CODER_DATA_CAN;
+  
+  
+  msTimer TIMER_Ball_Game_Mode_CAN;
+  msTimer TIMER_ABS_Msg_Data_CAN;
+  
+  
+  const long TIMER_VALUE_Ball_Game_Mode_CAN = 50;
+  const long TIMER_VALUE_ABS_Msg_Data_CAN = 1500;
+}
+
+//For main switch in on state.
+
+on sysvar Main_switch::sys_MainSwitch
+{
+ byte value;
+  value = @Main_switch::sys_MainSwitch;
+  if(value == 0x1)
+  {
+   cancelTimer(TIMER_Ball_Game_Mode_CAN);
+   cancelTimer(TIMER_ABS_Msg_Data_CAN);
+  }
+  else
+  {
+   setTimer(TIMER_Ball_Game_Mode_CAN,TIMER_VALUE_Ball_Game_Mode_CAN);
+   setTimer(TIMER_ABS_Msg_Data_CAN,TIMER_VALUE_ABS_Msg_Data_CAN);
+  }
+}
+
+on start
+{
+ setTimer(TIMER_Ball_Game_Mode_CAN,TIMER_VALUE_Ball_Game_Mode_CAN);
+ setTimer(TIMER_ABS_Msg_Data_CAN,TIMER_VALUE_ABS_Msg_Data_CAN);
+}
+
+
+//Code for Ball_Game_Mode_CAN: fixed periodic
+on timer TIMER_Ball_Game_Mode_CAN
+{
+  SendBall_Game_Mode_CAN(); 
+  setTimer(TIMER_Ball_Game_Mode_CAN,TIMER_VALUE_Ball_Game_Mode_CAN);
+}
+
+void SendBall_Game_Mode_CAN()
+{
+  byte can_miss_value;
+  byte can_switch_value;
+  
+  can_miss_value = @Main_switch::sys_Miss_Ball_Game_Mode_CAN;
+  can_switch_value = @Main_switch::sys_MainSwitch;
+  
+  if(can_miss_value == 0x0 && can_switch_value == 0x0)
+  {
+    output(CAN_Ball_Game_Mode_CAN);
+  }
+}
+
+on sysvar GWM::sys_Actv_Live_1_Rq
+{
+  CAN_Ball_Game_Mode_CAN.Actv_Live_1_Rq = @GWM::sys_Actv_Live_1_Rq;
+}
+
+on sysvar GWM::sys_Actv_Live_2_Rq
+{
+ CAN_Ball_Game_Mode_CAN.Actv_Live_2_Rq = @GWM::sys_Actv_Live_2_Rq;
+}
+
+on sysvar GWM::sys_Preset_6_Bank_Rq
+{
+  CAN_Ball_Game_Mode_CAN.Preset_6_Bank_Rq = @GWM::sys_Preset_6_Bank_Rq;
+}
+
+on sysvar GWM::sys_Preset_12_Bank_Rq
+{
+ byte Max_value;
+ Max_value = @GWM::sys_Preset_12_Bank_Rq;
+ if(Max_value <= 0xF)
+{
+  CAN_Ball_Game_Mode_CAN.Preset_12_Bank_Rq = @GWM::sys_Preset_12_Bank_Rq;
+}
+else
+{
+  openpanel("ERRORPANEL");
+}
+}
+on sysvar GWM::sys_FM_Menu_Data_Rq
+{
+  byte Max_value;
+  Max_value = @GWM::sys_FM_Menu_Data_Rq;
+ if(Max_value <= 0xFF)
+  {
+    CAN_Ball_Game_Mode_CAN.FM_Menu_Data_Rq = @GWM::sys_FM_Menu_Data_Rq;
+  }
+ else
+  {
+    openpanel("ERRORPANEL");
+  }
+}
+
+on sysvar GWM::sys_AM_Menu_Data_Rq
+{
+ byte Max_value;
+ Max_value = @GWM::sys_AM_Menu_Data_Rq;
+if (Max_value <= 65535)
+{
+  CAN_Ball_Game_Mode_CAN.AM_Menu_Data_Rq = @GWM::sys_AM_Menu_Data_Rq;
+}
+else
+{
+  openpanel("ERRORPANEL");
+}
+}
+
+//Code for ABS_Msg_Data_CAN: Event periodic
+on timer TIMER_ABS_Msg_Data_CAN
+{
+  sendABS_Msg_Data_CAN();
+  setTimer(TIMER_ABS_Msg_Data_CAN,TIMER_VALUE_ABS_Msg_Data_CAN);
+}
+
+void sendABS_Msg_Data_CAN()
+{
+  byte can_miss_value;
+  byte can_switch_value;
+  
+  can_miss_value = @Main_switch::sys_Miss_ABS_Msg_Data_CAN;
+  can_switch_value = @Main_switch::sys_MainSwitch;
+  
+  if(can_miss_value == 0x0 && can_switch_value == 0x0)
+  {
+    output(CAN_ABS_MSG_DATA_CAN);
+  }
+}
+
+on sysvar GWM::sys_Indictr_Lft_Dsply
+{
+  CAN_ABS_MSG_DATA_CAN.Indictr_Lft_Dsply = @GWM::sys_Indictr_Lft_Dsply;
+  sendABS_Msg_Data_CAN();
+}
+
+on sysvar GWM::sys_Indictr_Rgt_Dsply
+{
+  CAN_ABS_MSG_DATA_CAN.Indictr_Rgt_Dsply = @GWM::sys_Indictr_Rgt_Dsply;
+  sendABS_Msg_Data_CAN();
+}
+
+on sysvar GWM::sys_MID_Msg_Rq
+{
+  CAN_ABS_MSG_DATA_CAN.MID_Msg_Rq = @GWM::sys_MID_Msg_Rq;
+  sendABS_Msg_Data_CAN();
+}
+on sysvar GWM::sys_MID_Data_Rq
+{
+  byte Max_Value;
+  Max_Value = @GWM::sys_MID_Msg_Rq;
+ if(Max_Value <= 0xFF)
+  {
+   CAN_ABS_MSG_DATA_CAN.MID_Data_Rq = @GWM::sys_MID_Data_Rq;
+   sendABS_Msg_Data_CAN();
+  }
+ else
+  {
+   openpanel("ERRORPANEL");
+  }
+}
+
+on sysvar GWM::sys_HMI_MID_Sgnl_1_Rq
+{
+  byte Max_Value;
+  Max_Value = @GWM::sys_HMI_MID_Sgnl_1_Rq;
+ if(Max_Value <= 0xFF)
+  {
+   CAN_ABS_MSG_DATA_CAN.HMI_MID_Sgnl_1_Rq = @GWM::sys_HMI_MID_Sgnl_1_Rq;
+   sendABS_Msg_Data_CAN();
+  }
+ else
+  {
+   openpanel("ERRORPANEL");
+  }
+}
+
+on sysvar GWM::sys_HMI_MID_Sgnl_2_Rq
+{
+  byte Max_Value;
+  Max_Value = @GWM::sys_HMI_MID_Sgnl_2_Rq;
+ if(Max_Value <= 0xFF)
+  {
+   CAN_ABS_MSG_DATA_CAN.HMI_MID_Sgnl_2_Rq = @GWM::sys_HMI_MID_Sgnl_2_Rq;
+   sendABS_Msg_Data_CAN();
+  }
+ else
+  {
+   openpanel("ERRORPANEL");
+  }
+}
+
+on sysvar GWM::sys_HMI_MID_Sgnl_3_Rq
+{
+  byte Max_Value;
+  Max_Value = @GWM::sys_HMI_MID_Sgnl_3_Rq;
+ if(Max_Value <= 0xFF)
+  {
+   CAN_ABS_MSG_DATA_CAN.HMI_MID_Sgnl_3_Rq = @GWM::sys_HMI_MID_Sgnl_3_Rq;
+   sendABS_Msg_Data_CAN();
+  }
+ else
+  {
+   openpanel("ERRORPANEL");
+  }
+}
+
+on sysvar Main_switch::sys_Miss_ABS_Msg_Data_CAN
+{
+ byte value;
+  value = @Main_switch::sys_Miss_ABS_Msg_Data_CAN;
+  if(value == 0x1)
+  {
+   cancelTimer(TIMER_ABS_Msg_Data_CAN); 
+  }
+  else
+  {
+    setTimer(TIMER_ABS_Msg_Data_CAN,TIMER_VALUE_ABS_Msg_Data_CAN);
+  }
+}
+
+void sendRDS_Coder_Data_CAN()
+{
+  byte switch_value;
+  switch_value = @Main_switch::sys_MainSwitch;
+  if(switch_value == 0x0)
+  {
+    output(CAN_RDS_CODER_DATA_CAN);
+  }
+}
+
+on sysvar GWM::Sys_TA_Data_Rq
+{
+  CAN_RDS_CODER_DATA_CAN.TA_Data_Rq = @GWM::Sys_TA_Data_Rq;
+  sendRDS_Coder_Data_CAN();
+}
+
+on sysvar GWM::sys_Ahb_Dsply
+{
+   CAN_RDS_CODER_DATA_CAN.Ahb_Dsply = @GWM::sys_Ahb_Dsply;
+   sendRDS_Coder_Data_CAN();
+}
+
+on sysvar GWM::sys_TP_Data_Rq
+{
+  byte max_value;
+  max_value = @GWM::sys_TP_Data_Rq;
+  if(max_value <= 0xF)
+  {
+    CAN_RDS_CODER_DATA_CAN.TP_Data_Rq = @GWM::sys_TP_Data_Rq;
+    sendRDS_Coder_Data_CAN();
+  }
+  else
+  {
+    openpanel("ERRORPANEL");
+  }
+}
+
+on sysvar GWM::sys_Sig_Spdmtr_Rq
+{
+ byte max_value;
+ max_value = @GWM::sys_Sig_Spdmtr_Rq;
+ if(max_value <= 0xF0)
+{
+  CAN_RDS_CODER_DATA_CAN.Sig_Spdmtr_Rq = @GWM::sys_Sig_Spdmtr_Rq;
+  sendRDS_Coder_Data_CAN();
+}
+else
+{
+ openpanel("ERRORPANEL"); 
+}
+}

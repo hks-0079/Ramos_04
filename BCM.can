@@ -1,0 +1,198 @@
+/*@!Encoding:1252*/
+includes
+{
+  
+}
+
+variables
+{
+  message BCM_Msg_1_CAN CAN_BCM_MSG_1_CAN;
+  message Drive_Asst_Data_CAN CAN_DRIVE_ASST_DATA_CAN;
+  
+  
+  msTimer TIMER_BCM_MSG_1_CAN;
+  msTimer TIMER_DRIVE_ASST_DATA_CAN;
+  
+  
+  Const long TIMER_VALUE_BCM_MSG_1_CAN = 100;
+  const long TIMER_VALUE_DRIVE_ASST_DATA_CAN = 1000;
+}
+
+on start
+{
+ setTimer(TIMER_BCM_MSG_1_CAN,TIMER_VALUE_BCM_MSG_1_CAN);
+ setTimer(TIMER_DRIVE_ASST_DATA_CAN,TIMER_VALUE_DRIVE_ASST_DATA_CAN);
+}
+
+//Code for main switch message flow.
+on sysvar Main_switch::sys_MainSwitch
+{
+ byte switch_value;
+ switch_value = @Main_switch::sys_MainSwitch;
+ if(switch_value == 0x1)
+{
+  cancelTimer(TIMER_BCM_MSG_1_CAN);
+  cancelTimer(TIMER_DRIVE_ASST_DATA_CAN);
+}
+else
+{
+  setTimer(TIMER_BCM_MSG_1_CAN,TIMER_VALUE_BCM_MSG_1_CAN);
+  setTimer(TIMER_DRIVE_ASST_DATA_CAN,TIMER_VALUE_DRIVE_ASST_DATA_CAN);
+}
+}
+
+//code for BCM_Msg_1_CAN.
+on timer TIMER_BCM_MSG_1_CAN
+{
+  SendBCM_Msg_1_CAN();
+  setTimer(TIMER_BCM_MSG_1_CAN,TIMER_VALUE_BCM_MSG_1_CAN);
+}
+
+void SendBCM_Msg_1_CAN()
+{
+ byte can_miss_value;
+ byte can_main_value;
+ 
+ can_miss_value = @Main_switch::sys_Miss_BCM_Msg_1_CAN;
+ can_main_value = @Main_switch::sys_MainSwitch;
+ 
+ if(can_main_value == 0x0 && can_miss_value == 0x0)
+{
+ output(CAN_BCM_MSG_1_CAN);
+}
+}
+on sysvar BCM::sys_CRD_Msg_Txt_Rq_Dsply
+{
+  CAN_BCM_MSG_1_CAN.CRD_Msg_Txt_Rq_Dsply = @BCM::sys_CRD_Msg_Txt_Rq_Dsply;
+}
+
+on sysvar BCM::sys_Ignition_Status
+{
+ CAN_BCM_MSG_1_CAN.Ignition_Status = @BCM::sys_Ignition_Status;
+}
+
+on sysvar BCM::sys_CRD_Msg_Txt_Rq
+{
+ byte Max_value;
+ Max_value = @BCM::sys_CRD_Msg_Txt_Rq;
+ if(Max_value <= 65535)
+{
+  CAN_BCM_MSG_1_CAN.CRD_Msg_Txt_Rq = @BCM::sys_CRD_Msg_Txt_Rq;
+}
+else
+{
+ openpanel("ERRORPANEL"); 
+}
+}
+
+//Code for DRIVE_ASST_DATA_CAN.
+on timer TIMER_DRIVE_ASST_DATA_CAN
+{
+  sendDRIVE_ASST_DATA_CAN();
+  setTimer(TIMER_DRIVE_ASST_DATA_CAN,TIMER_VALUE_DRIVE_ASST_DATA_CAN);
+}
+
+void sendDRIVE_ASST_DATA_CAN()
+{
+ byte can_miss_value;
+ byte can_main_value;
+ 
+ can_miss_value = @Main_switch::sys_Miss_Drive_Asst_Data_CAN;
+ can_main_value = @Main_switch::sys_MainSwitch;
+ 
+ if(can_main_value == 0x0 && can_miss_value == 0x0)
+{
+ output(CAN_DRIVE_ASST_DATA_CAN);
+}
+}
+on sysvar BCM::sys_Menu_scrn_1_Data
+{
+  CAN_DRIVE_ASST_DATA_CAN.Menu_scrn_1_Data = @BCM::sys_Menu_scrn_1_Data;
+  sendDRIVE_ASST_DATA_CAN();
+}
+on sysvar BCM::sys_Artst_Name_1_Rq
+{
+ CAN_DRIVE_ASST_DATA_CAN.Artst_Name_1_Rq = @BCM::sys_Artst_Name_1_Rq;
+ sendDRIVE_ASST_DATA_CAN();
+}
+
+on sysvar BCM::sys_Artst_Name_2_Rq
+{
+  CAN_DRIVE_ASST_DATA_CAN.Artst_Name_2_Rq = @BCM::sys_Artst_Name_2_Rq;
+  sendDRIVE_ASST_DATA_CAN();
+}
+
+on sysvar BCM::sys_Radio_Txt_1_Rq
+{
+ byte max_value;
+ max_value = @BCM::sys_Radio_Txt_1_Rq;
+ if(max_value<=0xF)
+  {
+   CAN_DRIVE_ASST_DATA_CAN.Radio_Txt_1_Rq = @BCM::sys_Radio_Txt_1_Rq;
+   sendDRIVE_ASST_DATA_CAN();
+  }
+  else
+  {
+   openpanel("ERRORPANEL");
+  }
+}
+
+on sysvar BCM::sys_Radio_Txt_2_Rq
+{
+ byte max_value;
+ max_value = @BCM::sys_Radio_Txt_2_Rq;
+ if(max_value<=0xF)
+  {
+   CAN_DRIVE_ASST_DATA_CAN.Radio_Txt_2_Rq = @BCM::sys_Radio_Txt_2_Rq;
+   sendDRIVE_ASST_DATA_CAN();
+  }
+  else
+  {
+   openpanel("ERRORPANEL");
+  }
+}
+
+on sysvar BCM::sys_Radio_Txt_3_Rq
+{
+ byte max_value;
+ max_value = @BCM::sys_Radio_Txt_3_Rq;
+ if(max_value<=0xF)
+  {
+   CAN_DRIVE_ASST_DATA_CAN.Radio_Txt_3_Rq = @BCM::sys_Radio_Txt_3_Rq;
+   sendDRIVE_ASST_DATA_CAN();
+  }
+  else
+  {
+   openpanel("ERRORPANEL");
+  }
+}
+
+on sysvar BCM::sys_Tuner_Scrn_1_Data
+{
+  byte max_value;
+  max_value = @BCM::sys_Tuner_Scrn_1_Data;
+  if(max_value <= 255)
+  {
+    CAN_DRIVE_ASST_DATA_CAN.Tuner_Scrn_1_Data = @BCM::sys_Tuner_Scrn_1_Data;
+    sendDRIVE_ASST_DATA_CAN();
+  }
+  else
+  {
+   openpanel("ERRORPANEL"); 
+  }
+}
+
+on sysvar BCM::sys_Tuner_Scrn_2_Data
+{
+  byte max_value;
+  max_value = @BCM::sys_Tuner_Scrn_2_Data;
+  if(max_value <= 255)
+  {
+    CAN_DRIVE_ASST_DATA_CAN.Tuner_Scrn_2_Data = @BCM::sys_Tuner_Scrn_2_Data;
+    sendDRIVE_ASST_DATA_CAN();
+  }
+  else
+  {
+   openpanel("ERRORPANEL"); 
+  }
+}
